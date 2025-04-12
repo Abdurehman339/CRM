@@ -6,6 +6,7 @@ require("dotenv").config();
 const app = express();
 
 const authRoutes = require("./src/modules/auth/routes/auth.routes");
+const mailRoutes = require("./src/modules/mail/routes/mail.routes");
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -21,6 +22,7 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Express app!");
 });
 app.use("/api/auth", authRoutes);
+app.use("/api/mail", mailRoutes);
 
 connectDB();
 
