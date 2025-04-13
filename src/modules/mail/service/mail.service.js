@@ -96,8 +96,8 @@ exports.inboxMail = async ({ userId }) => {
 
   const inboxMails = await Mail.find({ "receiver.receiverId": userId })
     .sort({ createdAt: -1 })
-    .populate("sender", "fullName email") // show sender's basic info
-    .populate("receiver.receiverId", "fullName email"); // populate receiver info (optional)
+    .populate("sender", "fullName email")
+    .populate("receiver.receiverId", "fullName email");
 
   const mailIds = inboxMails.map((mail) => mail._id);
   const mailDetails = await MailDetail.find({
@@ -128,4 +128,36 @@ exports.inboxMail = async ({ userId }) => {
   });
 
   return combined;
+};
+
+exports.getMailbyId = async ({ userId, mailId }) => {
+  if (!userId || !mailId) {
+    throw new Error("User ID and Mail ID are required");
+  }
+
+  const mail = await Mail.findById(mailId)
+    .populate("sender", "fullName email")
+    .populate("receiver.receiverId", "fullName email");
+
+  if (!mail) {
+    throw new Error("Mail not found");
+  }
+
+  const mailDetail =
+    (await MailDetail.findOne({
+      user: userId,
+      mail: mailId,
+    })) || {};
+
+  if (mailDetail && mailDetail.trash) {
+    throw new Error("Mail is in trash");
+  }
+
+  return {
+    ...mail.toObject(),
+    detail: {
+      starred: mailDetail.starred || false,
+      important: mailDetail.important || false,
+    },
+  };
 };
