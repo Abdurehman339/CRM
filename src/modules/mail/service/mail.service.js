@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Mail = require("../model/mail.model.js");
+const MailDetail = require("../model/mail.detail.model.js");
 const User = require("../../user/model/user.model.js");
 
 exports.sendMail = async ({
@@ -55,10 +56,37 @@ exports.sentMail = async ({ userId }) => {
 
   const sentMails = await Mail.find({ sender: userId })
     .sort({ createdAt: -1 })
-    .populate("receiver.receiverId", "fullName email") // populating receiver basic info
-    .populate("sender", "fullName email"); // optionally populate sender info too
+    .populate("receiver.receiverId", "fullName email")
+    .populate("sender", "fullName email");
 
-  return sentMails;
+  const mailIds = sentMails.map((mail) => mail._id);
+
+  const mailDetails = await MailDetail.find({
+    user: userId,
+    mail: { $in: mailIds },
+  }).lean();
+
+  const detailMap = {};
+  mailDetails.forEach((detail) => {
+    detailMap[detail.mail.toString()] = detail;
+  });
+
+  const combined = sentMails.map((mail) => {
+    const mailObj = mail.toObject();
+    const detail = detailMap[mail._id.toString()] || {};
+
+    if (detail.trash) return;
+
+    return {
+      ...mailObj,
+      detail: {
+        starred: detail.starred || false,
+        important: detail.important || false,
+      },
+    };
+  });
+
+  return combined;
 };
 
 exports.inboxMail = async ({ userId }) => {
@@ -71,5 +99,33 @@ exports.inboxMail = async ({ userId }) => {
     .populate("sender", "fullName email") // show sender's basic info
     .populate("receiver.receiverId", "fullName email"); // populate receiver info (optional)
 
-  return inboxMails;
+  const mailIds = inboxMails.map((mail) => mail._id);
+  const mailDetails = await MailDetail.find({
+    user: userId,
+    mail: { $in: mailIds },
+  }).lean();
+
+  // Create a map for quick lookup
+  const detailMap = {};
+  mailDetails.forEach((detail) => {
+    detailMap[detail.mail.toString()] = detail;
+  });
+
+  // Step 3: Combine mail and detail
+  const combined = inboxMails.map((mail) => {
+    const mailObj = mail.toObject();
+    const detail = detailMap[mail._id.toString()] || {};
+
+    if (detail.trash) return;
+
+    return {
+      ...mailObj,
+      detail: {
+        starred: detail.starred || false,
+        important: detail.important || false,
+      },
+    };
+  });
+
+  return combined;
 };
