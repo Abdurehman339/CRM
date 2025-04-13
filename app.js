@@ -7,6 +7,7 @@ const app = express();
 
 const authRoutes = require("./src/modules/auth/routes/auth.routes");
 const mailRoutes = require("./src/modules/mail/routes/mail.routes");
+const userRoutes = require("./src/modules/user/routes/user.routes");
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -23,7 +24,7 @@ app.get("/", (req, res) => {
 });
 app.use("/api/auth", authRoutes);
 app.use("/api/mail", mailRoutes);
-
+app.use("/api/user", userRoutes);
 connectDB();
 
 module.exports = app;
