@@ -149,15 +149,293 @@ exports.getMailbyId = async ({ userId, mailId }) => {
       mail: mailId,
     })) || {};
 
-  if (mailDetail && mailDetail.trash) {
-    throw new Error("Mail is in trash");
-  }
-
   return {
     ...mail.toObject(),
     detail: {
       starred: mailDetail.starred || false,
       important: mailDetail.important || false,
+      trash: mailDetail.trash || false,
     },
   };
+};
+
+exports.toggleStarred = async ({ userId, mailId }) => {
+  if (!userId || !mailId) {
+    throw new Error("User ID and Mail ID are required");
+  }
+  const mailDetail = await MailDetail.findOneAndUpdate({
+    user: userId,
+    mail: mailId,
+  });
+  if (mailDetail) {
+    mailDetail.starred = !mailDetail.starred;
+    await mailDetail.save();
+  } else {
+    const newMailDetail = new MailDetail({
+      user: userId,
+      mail: mailId,
+      starred: true,
+    });
+    await newMailDetail.save();
+  }
+
+  return {
+    message: "Mail starred status toggled",
+    starred: mailDetail ? mailDetail.starred : true,
+  };
+};
+
+exports.toggleImportant = async ({ userId, mailId }) => {
+  if (!userId || !mailId) {
+    throw new Error("User ID and Mail ID are required");
+  }
+  const mailDetail = await MailDetail.findOneAndUpdate({
+    user: userId,
+    mail: mailId,
+  });
+  if (mailDetail) {
+    mailDetail.important = !mailDetail.important;
+    await mailDetail.save();
+  } else {
+    const newMailDetail = new MailDetail({
+      user: userId,
+      mail: mailId,
+      important: true,
+    });
+    await newMailDetail.save();
+  }
+
+  return {
+    message: "Mail important status toggled",
+    important: mailDetail ? mailDetail.important : true,
+  };
+};
+
+exports.toggleTrash = async ({ userId, mailId }) => {
+  if (!userId || !mailId) {
+    throw new Error("User ID and Mail ID are required");
+  }
+
+  const mailDetail = await MailDetail.findOneAndUpdate({
+    user: userId,
+    mail: mailId,
+  });
+  if (mailDetail) {
+    mailDetail.trash = !mailDetail.trash;
+    mailDetail.important = false;
+    mailDetail.starred = false;
+    await mailDetail.save();
+  } else {
+    const newMailDetail = new MailDetail({
+      user: userId,
+      mail: mailId,
+      trash: true,
+      important: false,
+      starred: false,
+    });
+    await newMailDetail.save();
+  }
+
+  return {
+    message: "Mail moved to trash",
+    trash: mailDetail ? mailDetail.trash : true,
+  };
+};
+
+exports.addToDraft = async ({
+  sender,
+  subject,
+  body,
+  attachments,
+  receiverIds,
+}) => {
+  if (
+    !sender &&
+    !receiverIds &&
+    receiverIds.length === 0 &&
+    !subject &&
+    !body
+  ) {
+    throw new Error("Missing required fields");
+  }
+
+  let receiverList;
+  if (receiverIds || receiverIds.length !== 0) {
+    for (const receiverId of receiverIds) {
+      if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+        throw new Error(`Invalid receiver ID format: ${receiverId}`);
+      }
+
+      const receiverExists = await User.findById(receiverId);
+      if (!receiverExists) {
+        throw new Error(`Receiver not found with ID: ${receiverId}`);
+      }
+    }
+    receiverList = receiverIds.map((id) => ({
+      receiverId: id,
+      seen: false,
+    }));
+  }
+
+  const newMail = new Mail({
+    sender,
+    receiver: receiverList,
+    subject: subject || "",
+    body: body || "",
+    attachments: attachments || [],
+    isDraft: true,
+  });
+
+  const savedMail = await newMail.save();
+  return savedMail;
+};
+
+exports.removeDraft = async ({ userId, mailId }) => {
+  if (!userId || !mailId) {
+    throw new Error("User ID and Mail ID are required");
+  }
+
+  const mail = await Mail.findById(mailId);
+
+  if (!mail) {
+    throw new Error("Mail not found");
+  }
+
+  // Ensure the mail is a draft
+  if (!mail.isDraft) {
+    throw new Error("This is not a draft mail");
+  }
+
+  // Remove mail detail entry if exists
+  await MailDetail.findOneAndDelete({
+    user: userId,
+    mail: mailId,
+  });
+
+  // Remove the actual draft mail
+  await Mail.findByIdAndDelete(mailId);
+
+  return {
+    message: "Draft removed successfully",
+    mailId,
+  };
+};
+
+exports.getDrafts = async ({ userId }) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
+  const drafts = await Mail.find({ sender: userId, isDraft: true })
+    .sort({ createdAt: -1 })
+    .populate("receiver.receiverId", "fullName email")
+    .populate("sender", "fullName email");
+
+  const filteredDrafts = await Promise.all(
+    drafts.map(async (draft) => {
+      const detail = await MailDetail.findOne({
+        user: userId,
+        mail: draft._id,
+      }).lean();
+      if (!detail?.trash) {
+        return draft;
+      }
+    })
+  );
+  return filteredDrafts;
+};
+
+exports.getImportant = async ({ userId }) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
+  const importantMailDetails = await MailDetail.find({
+    user: userId,
+    important: true,
+    trash: false,
+  });
+
+  const importantMails = await Promise.all(
+    importantMailDetails.map(async (mail) => {
+      const importantMail = await Mail.findById(mail.mail)
+        .populate("sender", "fullName email")
+        .populate("receiver.receiverId", "fullName email");
+      if (!importantMail) {
+        throw new Error("Mail not found");
+      }
+      return {
+        ...importantMail.toObject(),
+        detail: {
+          starred: mail.starred || false,
+          important: mail.important || false,
+          trash: mail.trash || false,
+        },
+      };
+    })
+  );
+  return importantMails;
+};
+
+exports.getStarred = async ({ userId }) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
+  const starredMailDetails = await MailDetail.find({
+    user: userId,
+    starred: true,
+    trash: false,
+  });
+
+  const starredMails = await Promise.all(
+    starredMailDetails.map(async (mail) => {
+      const starredMail = await Mail.findById(mail.mail)
+        .populate("sender", "fullName email")
+        .populate("receiver.receiverId", "fullName email");
+      if (!starredMail) {
+        throw new Error("Mail not found");
+      }
+      return {
+        ...starredMail.toObject(),
+        detail: {
+          starred: mail.starred || false,
+          important: mail.important || false,
+          trash: mail.trash || false,
+        },
+      };
+    })
+  );
+  return starredMails;
+};
+
+exports.getTrash = async ({ userId }) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
+  const trashMailDetails = await MailDetail.find({
+    user: userId,
+    trash: true,
+  });
+
+  const trashMails = await Promise.all(
+    trashMailDetails.map(async (mail) => {
+      const trashMail = await Mail.findById(mail.mail)
+        .populate("sender", "fullName email")
+        .populate("receiver.receiverId", "fullName email");
+      if (!trashMail) {
+        throw new Error("Mail not found");
+      }
+      return {
+        ...trashMail.toObject(),
+        detail: {
+          starred: mail.starred || false,
+          important: mail.important || false,
+          trash: mail.trash || false,
+        },
+      };
+    })
+  );
+  return trashMails;
 };

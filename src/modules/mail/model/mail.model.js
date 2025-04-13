@@ -22,12 +22,16 @@ const mailSchema = new mongoose.Schema(
     ],
     subject: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.isDraft;
+      },
       trim: true,
     },
     body: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.isDraft;
+      },
     },
     attachments: [
       {
