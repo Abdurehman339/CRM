@@ -24,6 +24,10 @@ const mailDetailSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    permanentlyDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

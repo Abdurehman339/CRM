@@ -14,6 +14,7 @@ const {
   getStarred,
   getTrash,
   removeDraft,
+  removeTrash,
 } = require("../controller/mail.controller.js");
 
 const router = express.Router();
@@ -30,6 +31,7 @@ router.get("/inbox", protectRoute, inboxMail);
 router.put("/toggle-starred/:id", protectRoute, toggleStarred);
 router.put("/toggle-important/:id", protectRoute, toggleImportant);
 router.put("/toggle-trash/:id", protectRoute, toggleTrash);
+router.put("/remove-trash/:id", protectRoute, removeTrash);
 router.get("/:id", protectRoute, getMailbyId);
 
 module.exports = router;

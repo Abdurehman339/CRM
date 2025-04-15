@@ -170,3 +170,16 @@ exports.getTrash = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch trash mails" });
   }
 };
+
+exports.removeTrash = async (req, res) => {
+  const userId = req.user._id;
+  const mailId = req.params.id;
+
+  try {
+    const updatedMail = await mailService.removeTrash({ userId, mailId });
+    res.status(200).json(updatedMail);
+  } catch (error) {
+    console.log("Error removing from trash:", error.message);
+    res.status(500).json({ message: "Failed to remove from trash" });
+  }
+};

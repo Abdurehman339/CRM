@@ -44,8 +44,22 @@ exports.sendMail = async ({
     attachments: attachments || [],
     isDraft: false,
   });
-
   const savedMail = await newMail.save();
+
+  const senderMailDetail = new MailDetail({
+    user: senderId,
+    mail: newMail._id,
+  });
+  await senderMailDetail.save();
+
+  receiverList.map((receiver) => {
+    const receiverMailDetail = new MailDetail({
+      user: receiver.receiverId,
+      mail: newMail._id,
+    });
+    receiverMailDetail.save();
+  });
+
   return savedMail;
 };
 
@@ -64,6 +78,7 @@ exports.sentMail = async ({ userId }) => {
   const mailDetails = await MailDetail.find({
     user: userId,
     mail: { $in: mailIds },
+    permanentlyDeleted: false,
   }).lean();
 
   const detailMap = {};
@@ -105,6 +120,7 @@ exports.inboxMail = async ({ userId }) => {
   const mailDetails = await MailDetail.find({
     user: userId,
     mail: { $in: mailIds },
+    permanentlyDeleted: false,
   }).lean();
 
   // Create a map for quick lookup
@@ -157,6 +173,7 @@ exports.getMailbyId = async ({ userId, mailId }) => {
       starred: mailDetail.starred || false,
       important: mailDetail.important || false,
       trash: mailDetail.trash || false,
+      permanentlyDeleted: mailDetail.permanentlyDeleted || false,
     },
   };
 };
@@ -339,7 +356,7 @@ exports.getDrafts = async ({ userId }) => {
         user: userId,
         mail: draft._id,
       }).lean();
-      if (!detail?.trash) {
+      if (!detail?.trash || !detail?.permanentlyDeleted) {
         return draft;
       }
     })
@@ -356,6 +373,7 @@ exports.getImportant = async ({ userId }) => {
     user: userId,
     important: true,
     trash: false,
+    permanentlyDeleted: false,
   });
 
   const importantMails = await Promise.all(
@@ -372,6 +390,7 @@ exports.getImportant = async ({ userId }) => {
           starred: mail.starred || false,
           important: mail.important || false,
           trash: mail.trash || false,
+          permanentlyDeleted: mail.permanentlyDeleted || false,
         },
       };
     })
@@ -388,6 +407,7 @@ exports.getStarred = async ({ userId }) => {
     user: userId,
     starred: true,
     trash: false,
+    permanentlyDeleted: false,
   });
 
   const starredMails = await Promise.all(
@@ -404,6 +424,7 @@ exports.getStarred = async ({ userId }) => {
           starred: mail.starred || false,
           important: mail.important || false,
           trash: mail.trash || false,
+          permanentlyDeleted: mail.permanentlyDeleted || false,
         },
       };
     })
@@ -419,6 +440,7 @@ exports.getTrash = async ({ userId }) => {
   const trashMailDetails = await MailDetail.find({
     user: userId,
     trash: true,
+    permanentlyDeleted: false,
   });
 
   const trashMails = await Promise.all(
@@ -435,9 +457,51 @@ exports.getTrash = async ({ userId }) => {
           starred: mail.starred || false,
           important: mail.important || false,
           trash: mail.trash || false,
+          permanentlyDeleted: mail.permanentlyDeleted || false,
         },
       };
     })
   );
   return trashMails;
+};
+
+exports.removeTrash = async ({ userId, mailId }) => {
+  if (!userId || !mailId) {
+    throw new Error("User ID and Mail ID are required");
+  }
+
+  console.log("User ID:", userId);
+
+  const mailDetail = await MailDetail.findOneAndUpdate(
+    {
+      user: userId,
+      mail: mailId,
+      trash: true,
+    },
+    {
+      permanentlyDeleted: true,
+      trash: false,
+    },
+    { new: true }
+  );
+
+  if (!mailDetail) {
+    throw new Error("Mail not found in trash");
+  }
+
+  const remainingDetails = await MailDetail.find({ mail: mailId });
+
+  const allDeleted = remainingDetails.every(
+    (detail) => detail.permanentlyDeleted
+  );
+
+  if (allDeleted) {
+    await Mail.findByIdAndDelete(mailId);
+    await MailDetail.deleteMany({ mail: mailId });
+  }
+
+  return {
+    message: "Mail removed from trash",
+    mailDetail,
+  };
 };
