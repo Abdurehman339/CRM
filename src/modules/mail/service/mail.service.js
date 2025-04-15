@@ -86,7 +86,9 @@ exports.sentMail = async ({ userId }) => {
     };
   });
 
-  return combined;
+  const filteredMails = combined.filter(Boolean);
+
+  return filteredMails;
 };
 
 exports.inboxMail = async ({ userId }) => {
