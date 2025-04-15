@@ -163,7 +163,7 @@ exports.toggleStarred = async ({ userId, mailId }) => {
   if (!userId || !mailId) {
     throw new Error("User ID and Mail ID are required");
   }
-  const mailDetail = await MailDetail.findOneAndUpdate({
+  const mailDetail = await MailDetail.findOne({
     user: userId,
     mail: mailId,
   });
@@ -189,7 +189,7 @@ exports.toggleImportant = async ({ userId, mailId }) => {
   if (!userId || !mailId) {
     throw new Error("User ID and Mail ID are required");
   }
-  const mailDetail = await MailDetail.findOneAndUpdate({
+  const mailDetail = await MailDetail.findOne({
     user: userId,
     mail: mailId,
   });
@@ -216,7 +216,7 @@ exports.toggleTrash = async ({ userId, mailId }) => {
     throw new Error("User ID and Mail ID are required");
   }
 
-  const mailDetail = await MailDetail.findOneAndUpdate({
+  const mailDetail = await MailDetail.findOne({
     user: userId,
     mail: mailId,
   });
