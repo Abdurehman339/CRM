@@ -33,9 +33,10 @@ exports.sentMail = async (req, res) => {
 
 exports.inboxMail = async (req, res) => {
   const userId = req.user._id;
+  const { page, limit } = req.query;
 
   try {
-    const mails = await mailService.inboxMail({ userId });
+    const mails = await mailService.inboxMail({ userId, page, limit });
     res.status(200).json(mails);
   } catch (error) {
     console.log("Error fetching inbox mails:", error.message);

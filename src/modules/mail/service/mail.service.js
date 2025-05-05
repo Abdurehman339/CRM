@@ -106,13 +106,23 @@ exports.sentMail = async ({ userId }) => {
   return filteredMails;
 };
 
-exports.inboxMail = async ({ userId }) => {
+exports.inboxMail = async ({ userId, page = 1, limit = 10 }) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
 
+  page = Math.max(parseInt(page), 1);
+  limit = Math.max(parseInt(limit), 1);
+  const skip = (page - 1) * limit;
+
+  const totalMails = await Mail.countDocuments({
+    "receiver.receiverId": userId,
+  });
+
   const inboxMails = await Mail.find({ "receiver.receiverId": userId })
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .populate("sender", "fullName email")
     .populate("receiver.receiverId", "fullName email");
 
@@ -145,7 +155,12 @@ exports.inboxMail = async ({ userId }) => {
     };
   });
 
-  return combined;
+  return {
+    currentPage: page,
+    totalPages: Math.ceil(totalMails / limit),
+    totalMails,
+    mails: combined,
+  };
 };
 
 exports.getMailbyId = async ({ userId, mailId }) => {
