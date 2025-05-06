@@ -63,13 +63,23 @@ exports.sendMail = async ({
   return savedMail;
 };
 
-exports.sentMail = async ({ userId }) => {
+exports.sentMail = async ({ userId, page = 1, limit = 10 }) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
 
+  page = Math.max(parseInt(page), 1);
+  limit = Math.max(parseInt(limit), 1);
+  const skip = (page - 1) * limit;
+
+  const totalMails = await Mail.countDocuments({
+    sender: userId,
+  });
+
   const sentMails = await Mail.find({ sender: userId })
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .populate("receiver.receiverId", "fullName email")
     .populate("sender", "fullName email");
 
@@ -103,7 +113,12 @@ exports.sentMail = async ({ userId }) => {
 
   const filteredMails = combined.filter(Boolean);
 
-  return filteredMails;
+  return {
+    currentPage: page,
+    totalPages: Math.ceil(totalMails / limit),
+    totalMails,
+    mails: filteredMails,
+  };
 };
 
 exports.inboxMail = async ({ userId, page = 1, limit = 10 }) => {
@@ -355,13 +370,24 @@ exports.removeDraft = async ({ userId, mailId }) => {
   };
 };
 
-exports.getDrafts = async ({ userId }) => {
+exports.getDrafts = async ({ userId, page = 1, limit = 10 }) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
 
+  page = Math.max(parseInt(page), 1);
+  limit = Math.max(parseInt(limit), 1);
+  const skip = (page - 1) * limit;
+
+  const totalMails = await Mail.countDocuments({
+    sender: userId,
+    isDraft: true,
+  });
+
   const drafts = await Mail.find({ sender: userId, isDraft: true })
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .populate("receiver.receiverId", "fullName email")
     .populate("sender", "fullName email");
 
@@ -376,20 +402,38 @@ exports.getDrafts = async ({ userId }) => {
       }
     })
   );
-  return filteredDrafts;
+  return {
+    currentPage: page,
+    totalPages: Math.ceil(totalMails / limit),
+    totalMails,
+    mails: filteredDrafts,
+  };
 };
 
-exports.getImportant = async ({ userId }) => {
+exports.getImportant = async ({ userId, page = 1, limit = 10 }) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
+
+  page = Math.max(parseInt(page), 1);
+  limit = Math.max(parseInt(limit), 1);
+  const skip = (page - 1) * limit;
+
+  const totalMails = await MailDetail.countDocuments({
+    user: userId,
+    important: true,
+    trash: false,
+    permanentlyDeleted: false,
+  });
 
   const importantMailDetails = await MailDetail.find({
     user: userId,
     important: true,
     trash: false,
     permanentlyDeleted: false,
-  });
+  })
+    .skip(skip)
+    .limit(limit);
 
   const importantMails = await Promise.all(
     importantMailDetails.map(async (mail) => {
@@ -410,20 +454,38 @@ exports.getImportant = async ({ userId }) => {
       };
     })
   );
-  return importantMails;
+  return {
+    currentPage: page,
+    totalPages: Math.ceil(totalMails / limit),
+    totalMails,
+    mails: importantMails,
+  };
 };
 
-exports.getStarred = async ({ userId }) => {
+exports.getStarred = async ({ userId, page = 1, limit = 10 }) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
+
+  page = Math.max(parseInt(page), 1);
+  limit = Math.max(parseInt(limit), 1);
+  const skip = (page - 1) * limit;
+
+  const totalMails = await MailDetail.countDocuments({
+    user: userId,
+    starred: true,
+    trash: false,
+    permanentlyDeleted: false,
+  });
 
   const starredMailDetails = await MailDetail.find({
     user: userId,
     starred: true,
     trash: false,
     permanentlyDeleted: false,
-  });
+  })
+    .skip(skip)
+    .limit(limit);
 
   const starredMails = await Promise.all(
     starredMailDetails.map(async (mail) => {
@@ -444,19 +506,36 @@ exports.getStarred = async ({ userId }) => {
       };
     })
   );
-  return starredMails;
+  return {
+    currentPage: page,
+    totalPages: Math.ceil(totalMails / limit),
+    totalMails,
+    mails: starredMails,
+  };
 };
 
-exports.getTrash = async ({ userId }) => {
+exports.getTrash = async ({ userId, page = 1, limit = 10 }) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
+
+  page = Math.max(parseInt(page), 1);
+  limit = Math.max(parseInt(limit), 1);
+  const skip = (page - 1) * limit;
+
+  const totalMails = await MailDetail.countDocuments({
+    user: userId,
+    trash: true,
+    permanentlyDeleted: false,
+  });
 
   const trashMailDetails = await MailDetail.find({
     user: userId,
     trash: true,
     permanentlyDeleted: false,
-  });
+  })
+    .skip(skip)
+    .limit(limit);
 
   const trashMails = await Promise.all(
     trashMailDetails.map(async (mail) => {
@@ -477,7 +556,12 @@ exports.getTrash = async ({ userId }) => {
       };
     })
   );
-  return trashMails;
+  return {
+    currentPage: page,
+    totalPages: Math.ceil(totalMails / limit),
+    totalMails,
+    mails: trashMails,
+  };
 };
 
 exports.removeTrash = async ({ userId, mailId }) => {

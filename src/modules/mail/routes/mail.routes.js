@@ -19,19 +19,19 @@ const {
 
 const router = express.Router();
 
-router.post("/send", protectRoute, sendMail);
-router.post("/add-to-draft", protectRoute, addToDraft);
-router.put("/remove-draft/:id", protectRoute, removeDraft);
-router.get("/get-draft", protectRoute, getDraft);
-router.get("/get-important", protectRoute, getImportant);
-router.get("/get-starred", protectRoute, getStarred);
-router.get("/get-trash", protectRoute, getTrash);
-router.get("/sent", protectRoute, sentMail);
-router.get("/inbox", protectRoute, inboxMail);
-router.put("/toggle-starred/:id", protectRoute, toggleStarred);
-router.put("/toggle-important/:id", protectRoute, toggleImportant);
-router.put("/toggle-trash/:id", protectRoute, toggleTrash);
-router.put("/remove-trash/:id", protectRoute, removeTrash);
-router.get("/:id", protectRoute, getMailbyId);
+router.post("/send", protectRoute(), sendMail);
+router.post("/add-to-draft", protectRoute(), addToDraft);
+router.put("/remove-draft/:id", protectRoute(), removeDraft);
+router.get("/get-draft", protectRoute(), getDraft);
+router.get("/get-important", protectRoute(), getImportant);
+router.get("/get-starred", protectRoute(), getStarred);
+router.get("/get-trash", protectRoute(), getTrash);
+router.get("/sent", protectRoute(), sentMail);
+router.get("/inbox", protectRoute(), inboxMail);
+router.put("/toggle-starred/:id", protectRoute(), toggleStarred);
+router.put("/toggle-important/:id", protectRoute(), toggleImportant);
+router.put("/toggle-trash/:id", protectRoute(), toggleTrash);
+router.put("/remove-trash/:id", protectRoute(), removeTrash);
+router.get("/:id", protectRoute(), getMailbyId);
 
 module.exports = router;

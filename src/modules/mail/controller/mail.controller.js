@@ -21,9 +21,10 @@ exports.sendMail = async (req, res) => {
 
 exports.sentMail = async (req, res) => {
   const userId = req.user._id;
+  const { page, limit } = req.query;
 
   try {
-    const mails = await mailService.sentMail({ userId });
+    const mails = await mailService.sentMail({ userId, page, limit });
     res.status(200).json(mails);
   } catch (error) {
     console.log("Error fetching sent mails:", error.message);
@@ -126,9 +127,10 @@ exports.removeDraft = async (req, res) => {
 
 exports.getDraft = async (req, res) => {
   const userId = req.user._id;
+  const { page, limit } = req.query;
 
   try {
-    const drafts = await mailService.getDrafts({ userId });
+    const drafts = await mailService.getDrafts({ userId, page, limit });
     res.status(200).json(drafts);
   } catch (error) {
     console.log("Error fetching drafts:", error.message);
@@ -138,9 +140,14 @@ exports.getDraft = async (req, res) => {
 
 exports.getImportant = async (req, res) => {
   const userId = req.user._id;
+  const { page, limit } = req.query;
 
   try {
-    const importantMails = await mailService.getImportant({ userId });
+    const importantMails = await mailService.getImportant({
+      userId,
+      page,
+      limit,
+    });
     res.status(200).json(importantMails);
   } catch (error) {
     console.log("Error fetching important mails:", error.message);
@@ -150,9 +157,10 @@ exports.getImportant = async (req, res) => {
 
 exports.getStarred = async (req, res) => {
   const userId = req.user._id;
+  const { page, limit } = req.query;
 
   try {
-    const starredMails = await mailService.getStarred({ userId });
+    const starredMails = await mailService.getStarred({ userId, page, limit });
     res.status(200).json(starredMails);
   } catch (error) {
     console.log("Error fetching starred mails:", error.message);
@@ -162,9 +170,10 @@ exports.getStarred = async (req, res) => {
 
 exports.getTrash = async (req, res) => {
   const userId = req.user._id;
+  const { page, limit } = req.query;
 
   try {
-    const trashMails = await mailService.getTrash({ userId });
+    const trashMails = await mailService.getTrash({ userId, page, limit });
     res.status(200).json(trashMails);
   } catch (error) {
     console.log("Error fetching trash mails:", error.message);
