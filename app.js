@@ -9,6 +9,7 @@ const app = express();
 const authRoutes = require("./src/modules/auth/routes/auth.routes");
 const mailRoutes = require("./src/modules/mail/routes/mail.routes");
 const userRoutes = require("./src/modules/user/routes/user.routes");
+const errorHandler = require("./src/middlewares/error.handler");
 
 app.use(responseInterceptor);
 app.use(express.json({ limit: "50mb" }));
@@ -34,6 +35,8 @@ app.use("/api/user", userRoutes);
 app.get("/api/health", (req, res) => {
   res.send({ status: "Server is healthy!" });
 });
+
+app.use(errorHandler);
 
 //DB connection
 connectDB();
