@@ -38,7 +38,8 @@ exports.logout = (req, res, next) => {
 
 exports.checkAuth = (req, res, next) => {
   try {
-    const { status, data } = authService.checkAuth(req.user);
+    const { user } = req;
+    const { status, data } = authService.checkAuth(user);
     res.status(status).json(data);
   } catch (error) {
     if (process.env.MODE == "dev") {

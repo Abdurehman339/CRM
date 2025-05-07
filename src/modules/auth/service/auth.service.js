@@ -30,7 +30,7 @@ exports.signup = async ({ fullName, email, password }, res) => {
 
   await newUser.save();
 
-  generateToken(newUser._id, res); // Set token in cookie or header
+  generateToken(newUser._id, res);
 
   return {
     status: 201,
@@ -43,14 +43,14 @@ exports.signup = async ({ fullName, email, password }, res) => {
   };
 };
 
-exports.login = async ({ email, password }, res) => {
-  const user = await User.findOne({ email });
+exports.login = async ({ Email, Password }, res) => {
+  const user = await User.findOne({ Email: Email });
 
   if (!user) {
     return { status: 400, data: { message: "Invalid credentials" } };
   }
 
-  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+  const isPasswordCorrect = await user.comparePassword(Password);
   if (!isPasswordCorrect) {
     return { status: 400, data: { message: "Invalid credentials" } };
   }
@@ -61,9 +61,9 @@ exports.login = async ({ email, password }, res) => {
     status: 200,
     data: {
       _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      profilePic: user.profilePic,
+      fullName: user.FullName,
+      email: user.Email,
+      profilePic: user.ProfileImage,
     },
   };
 };

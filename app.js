@@ -9,6 +9,7 @@ const app = express();
 const authRoutes = require("./src/modules/auth/routes/auth.routes");
 const mailRoutes = require("./src/modules/mail/routes/mail.routes");
 const userRoutes = require("./src/modules/user/routes/user.routes");
+const HrmRoutes = require("./src/modules/hrm/routes/hrm.routes");
 const errorHandler = require("./src/middlewares/error.handler");
 
 app.use(responseInterceptor);
@@ -30,6 +31,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/mail", mailRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/hrm", HrmRoutes);
 
 // Health check route
 app.get("/api/health", (req, res) => {

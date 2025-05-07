@@ -5,6 +5,6 @@ const { ALL } = require("../../../config/permission.js");
 
 const router = express.Router();
 
-router.get("/get-all", protectRoute(), getAllUsers);
+// router.get("/get-all", protectRoute(), getAllUsers);
 
 module.exports = router;

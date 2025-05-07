@@ -23,7 +23,9 @@ const protectRoute = (requiredPermission) => {
       const user = await User.findById(decoded.userId).select("-password");
 
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res
+          .status(404)
+          .json({ message: "You are not authorized for this request" });
       }
 
       req.user = user;
