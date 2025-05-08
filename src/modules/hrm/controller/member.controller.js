@@ -1,4 +1,4 @@
-const hrmService = require("../service/hrm.service.js");
+const hrmService = require("../service/member.service.js");
 
 exports.getDefaultRBAC = (req, res, next) => {
   try {

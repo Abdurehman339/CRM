@@ -5,11 +5,6 @@ const responseInterceptor = require("./src/middlewares/response.interceptor");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
-
-const authRoutes = require("./src/modules/auth/routes/auth.routes");
-const mailRoutes = require("./src/modules/mail/routes/mail.routes");
-const userRoutes = require("./src/modules/user/routes/user.routes");
-const HrmRoutes = require("./src/modules/hrm/routes/hrm.routes");
 const errorHandler = require("./src/middlewares/error.handler");
 
 app.use(responseInterceptor);
@@ -28,12 +23,12 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/mail", mailRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/hrm", HrmRoutes);
+app.use("/api/auth", require("./src/modules/auth/routes/auth.routes"));
+app.use("/api/mail", require("./src/modules/mail/routes/mail.routes"));
+app.use("/api/user", require("./src/modules/user/routes/user.routes"));
+app.use("/api/hrm/member", require("./src/modules/hrm/routes/member.routes"));
+app.use("/api/hrm/holiday", require("./src/modules/hrm/routes/holiday.routes"));
 
-// Health check route
 app.get("/api/health", (req, res) => {
   res.send({ status: "Server is healthy!" });
 });

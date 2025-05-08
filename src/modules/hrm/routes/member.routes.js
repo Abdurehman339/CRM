@@ -7,7 +7,7 @@ const {
   deleteMember,
   getAllMembers,
   updateMember,
-} = require("../controller/hrm.controller.js");
+} = require("../controller/member.controller.js");
 
 const router = express.Router();
 
