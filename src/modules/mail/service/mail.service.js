@@ -80,8 +80,8 @@ exports.sentMail = async ({ userId, page = 1, limit = 10 }) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .populate("receiver.receiverId", "fullName email")
-    .populate("sender", "fullName email");
+    .populate("receiver.receiverId", "FullName Email")
+    .populate("sender", "FullName Email");
 
   const mailIds = sentMails.map((mail) => mail._id);
 
@@ -138,8 +138,8 @@ exports.inboxMail = async ({ userId, page = 1, limit = 10 }) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .populate("sender", "fullName email")
-    .populate("receiver.receiverId", "fullName email");
+    .populate("sender", "FullName Email")
+    .populate("receiver.receiverId", "FullName Email");
 
   const mailIds = inboxMails.map((mail) => mail._id);
   const mailDetails = await MailDetail.find({
@@ -184,8 +184,8 @@ exports.getMailbyId = async ({ userId, mailId }) => {
   }
 
   const mail = await Mail.findById(mailId)
-    .populate("sender", "fullName email")
-    .populate("receiver.receiverId", "fullName email");
+    .populate("sender", "FullName Email")
+    .populate("receiver.receiverId", "FullName Email");
 
   if (!mail) {
     throw new Error("Mail not found");
@@ -388,8 +388,8 @@ exports.getDrafts = async ({ userId, page = 1, limit = 10 }) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
-    .populate("receiver.receiverId", "fullName email")
-    .populate("sender", "fullName email");
+    .populate("receiver.receiverId", "FullName Email")
+    .populate("sender", "FullName Email");
 
   const filteredDrafts = await Promise.all(
     drafts.map(async (draft) => {
@@ -438,8 +438,8 @@ exports.getImportant = async ({ userId, page = 1, limit = 10 }) => {
   const importantMails = await Promise.all(
     importantMailDetails.map(async (mail) => {
       const importantMail = await Mail.findById(mail.mail)
-        .populate("sender", "fullName email")
-        .populate("receiver.receiverId", "fullName email");
+        .populate("sender", "FullName Email")
+        .populate("receiver.receiverId", "FullName Email");
       if (!importantMail) {
         throw new Error("Mail not found");
       }
@@ -490,8 +490,8 @@ exports.getStarred = async ({ userId, page = 1, limit = 10 }) => {
   const starredMails = await Promise.all(
     starredMailDetails.map(async (mail) => {
       const starredMail = await Mail.findById(mail.mail)
-        .populate("sender", "fullName email")
-        .populate("receiver.receiverId", "fullName email");
+        .populate("sender", "FullName Email")
+        .populate("receiver.receiverId", "FullName Email");
       if (!starredMail) {
         throw new Error("Mail not found");
       }
@@ -540,8 +540,8 @@ exports.getTrash = async ({ userId, page = 1, limit = 10 }) => {
   const trashMails = await Promise.all(
     trashMailDetails.map(async (mail) => {
       const trashMail = await Mail.findById(mail.mail)
-        .populate("sender", "fullName email")
-        .populate("receiver.receiverId", "fullName email");
+        .populate("sender", "FullName Email")
+        .populate("receiver.receiverId", "FullName Email");
       if (!trashMail) {
         throw new Error("Mail not found");
       }
