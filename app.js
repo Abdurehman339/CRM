@@ -28,6 +28,13 @@ app.use("/api/mail", require("./src/modules/mail/routes/mail.routes"));
 app.use("/api/user", require("./src/modules/user/routes/user.routes"));
 app.use("/api/hrm/member", require("./src/modules/hrm/routes/member.routes"));
 app.use("/api/hrm/holiday", require("./src/modules/hrm/routes/holiday.routes"));
+app.use("/api/task", require("./src/modules/task/routes/task.routes"));
+app.use("/api/comment", require("./src/modules/task/routes/comment.routes"));
+app.use("/api/reminder", require("./src/modules/task/routes/reminder.routes"));
+app.use(
+  "/api/notification",
+  require("./src/modules/notification/routes/notification.routes")
+);
 
 app.get("/api/health", (req, res) => {
   res.send({ status: "Server is healthy!" });
